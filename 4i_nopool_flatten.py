@@ -18,7 +18,7 @@ from keras.utils import plot_model
 from keras.models import Model
 from keras.layers import Input
 from keras.layers import Dense
-#from keras.layers import Flatten
+from keras.layers import Flatten
 from keras.layers import LSTM
 from keras.layers import RepeatVector
 from keras.layers import TimeDistributed
@@ -119,26 +119,26 @@ def create_sequences(tokenizer, desc, image, max_length):
 
 # define the captioning model - INCREASE EMBEDDING LAYER (EMB2) TO 100 NODES
 def define_model(vocab_size, max_length):
-	# feature extractor (encoder)
-	inputs1 = Input(shape=(7, 7, 512))
-	fe1 = Flatten()(inputs1)
-	fe2 = Dense(128, activation='relu')(fe1)
-	fe3 = RepeatVector(max_length)(fe2)
-	# embedding
-	inputs2 = Input(shape=(max_length,))
-	emb2 = Embedding(vocab_size, 50, mask_zero=True)(inputs2)
-	emb3 = LSTM(256, return_sequences=True)(emb2)
-	emb4 = TimeDistributed(Dense(128, activation='relu'))(emb3)
-	# merge inputs
-	merged = concatenate([fe3, emb4])
-	# language model (decoder)
-	lm2 = LSTM(500)(merged)
-	lm3 = Dense(500, activation='relu')(lm2)
-	outputs = Dense(vocab_size, activation='softmax')(lm3)
-	# tie it together [image, seq] [word]
-	model = Model(inputs=[inputs1, inputs2], outputs=outputs)
-	model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-	return model
+    # feature extractor (encoder)
+    inputs1 = Input(shape=(7, 7, 512))
+    fe1 = Flatten()(inputs1)
+    fe2 = Dense(128, activation='relu')(fe1)
+    fe3 = RepeatVector(max_length)(fe2)
+    # embedding
+    inputs2 = Input(shape=(max_length,))
+    emb2 = Embedding(vocab_size, 50, mask_zero=True)(inputs2)
+    emb3 = LSTM(256, return_sequences=True)(emb2)
+    emb4 = TimeDistributed(Dense(128, activation='relu'))(emb3)
+    # merge inputs
+    merged = concatenate([fe3, emb4])
+    # language model (decoder)
+    lm2 = LSTM(500)(merged)
+    lm3 = Dense(500, activation='relu')(lm2)
+    outputs = Dense(vocab_size, activation='softmax')(lm3)
+    # tie it together [image, seq] [word]
+    model = Model(inputs=[inputs1, inputs2], outputs=outputs)
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    return model
 
 
 # data generator, intended to be used in a call to model.fit_generator()
@@ -178,6 +178,7 @@ for i in range(epochs):
           lowLoss = history.history["loss"]
           model.save('model_out.h5')
 '''
+
 
 # map an integer to a word
 def word_for_id(integer, tokenizer):

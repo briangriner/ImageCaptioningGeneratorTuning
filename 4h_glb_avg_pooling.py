@@ -1,6 +1,6 @@
 # baseline model - load, fit, evaluate, test & predict
 
-from os import listdir
+#from os import listdir
 from numpy import array
 from numpy import argmax
 from pandas import DataFrame
@@ -14,11 +14,11 @@ from keras.utils import to_categorical
 #from keras.preprocessing.image import img_to_array
 #from keras.applications.vgg16 import preprocess_input
 #from keras.applications.vgg16 import VGG16
-from keras.utils import plot_model
+#from keras.utils import plot_model
 from keras.models import Model
 from keras.layers import Input
 from keras.layers import Dense
-from keras.layers import Flatten
+#from keras.layers import Flatten
 from keras.layers import LSTM
 from keras.layers import RepeatVector
 from keras.layers import TimeDistributed
@@ -178,6 +178,7 @@ for i in range(epochs):
           lowLoss = history.history["loss"]
           model.save('model_out.h5')
 '''
+
 
 # map an integer to a word
 def word_for_id(integer, tokenizer):

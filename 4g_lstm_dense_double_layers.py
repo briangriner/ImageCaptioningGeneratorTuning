@@ -1,30 +1,22 @@
 # baseline model - load, fit, evaluate, test & predict
 
-#from os import listdir
-from numpy import array
-from numpy import argmax
-from pandas import DataFrame
-from nltk.translate.bleu_score import corpus_bleu
 from pickle import load
 
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from keras.utils import to_categorical
-#from keras.preprocessing.image import load_img
-#from keras.preprocessing.image import img_to_array
-#from keras.applications.vgg16 import preprocess_input
-#from keras.applications.vgg16 import VGG16
-from keras.utils import plot_model
-from keras.models import Model
-from keras.layers import Input
 from keras.layers import Dense
-#from keras.layers import Flatten
+from keras.layers import Embedding
+from keras.layers import Input
 from keras.layers import LSTM
 from keras.layers import RepeatVector
 from keras.layers import TimeDistributed
-from keras.layers import Embedding
 from keras.layers.merge import concatenate
-from keras.layers.pooling import GlobalMaxPooling2D
+from keras.models import Model
+from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
+from keras.utils import to_categorical
+from nltk.translate.bleu_score import corpus_bleu
+from numpy import argmax
+from numpy import array
+from pandas import DataFrame
 
 
 # load doc into memory
@@ -119,27 +111,27 @@ def create_sequences(tokenizer, desc, image, max_length):
 
 # define the captioning model - INCREASE EMBEDDING LAYER (EMB2) TO 100 NODES
 def define_model(vocab_size, max_length):
-	# feature extractor (encoder)
-	inputs1 = Input(shape=(7, 7, 512))
-	fe1 = GlobalMaxPooling2D()(inputs1)
-	fe2 = Dense(128, activation='relu')(fe1)
-	fe3 = RepeatVector(max_length)(fe2)
-	# embedding
-	inputs2 = Input(shape=(max_length,))
-	emb2 = Embedding(vocab_size, 50, mask_zero=True)(inputs2)
-	emb3 = LSTM(256, return_sequences=True)(emb2)
-	emb4 = TimeDistributed(Dense(128, activation='relu'))(emb3)
-	# merge inputs
-	merged = concatenate([fe3, emb4])
-	# language model (decoder)
-	lm2 = LSTM(500, return_sequences=True)(merged)
+    # feature extractor (encoder)
+    inputs1 = Input(shape=(7, 7, 512))
+    fe1 = GlobalMaxPooling2D()(inputs1)
+    fe2 = Dense(128, activation='relu')(fe1)
+    fe3 = RepeatVector(max_length)(fe2)
+    # embedding
+    inputs2 = Input(shape=(max_length,))
+    emb2 = Embedding(vocab_size, 50, mask_zero=True)(inputs2)
+    emb3 = LSTM(256, return_sequences=True)(emb2)
+    emb4 = TimeDistributed(Dense(128, activation='relu'))(emb3)
+    # merge inputs
+    merged = concatenate([fe3, emb4])
+    # language model (decoder)
+    lm2 = LSTM(500, return_sequences=True)(merged)
     lm3 = LSTM(500)(lm2)
-	lm4 = Dense(500, activation='relu')(lm3)
-	outputs = Dense(vocab_size, activation='softmax')(lm4)
-	# tie it together [image, seq] [word]
-	model = Model(inputs=[inputs1, inputs2], outputs=outputs)
-	model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-	return model
+    lm4 = Dense(500, activation='relu')(lm3)
+    outputs = Dense(vocab_size, activation='softmax')(lm4)
+    # tie it together [image, seq] [word]
+    model = Model(inputs=[inputs1, inputs2], outputs=outputs)
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    return model
 
 
 # data generator, intended to be used in a call to model.fit_generator()

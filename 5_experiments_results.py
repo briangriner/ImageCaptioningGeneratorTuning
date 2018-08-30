@@ -1,5 +1,12 @@
 # analysis of experimental results
 
+# BEFORE YOU RUN THIS SCRIPT:
+# 1. CREATE A DIR CALLED 'results' - from cmd line type 'mkdir results'
+# 2. MOVE ALL *.csv MODEL OUTPUT FILES INTO 'results'
+# 3. DOING IT THIS WAY ALLOWS YOU TO CREATE AN ARBITRARY # OF MODELS TO TEST
+#    AND YOU CAN STILL RUN THIS SCRIPT WITHOUT TYPING OUT ALL THE FILE NAMES
+
+
 from os import listdir
 from pandas import read_csv
 from pandas import DataFrame

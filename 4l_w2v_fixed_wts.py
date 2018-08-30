@@ -1,6 +1,7 @@
 # baseline model - load, fit, evaluate, test & predict
 
 #from os import listdir
+from numpy import zeros
 from numpy import array
 from numpy import argmax
 from pandas import DataFrame
@@ -119,43 +120,43 @@ def create_sequences(tokenizer, desc, image, max_length):
 
 # load a word embedding - LOAD WORD2VEC EMBEDDINGS - TRAINABLE=F
 def load_embedding(tokenizer, vocab_size, max_length):
-	# load the tokenizer
-	embedding = load(open('word2vec_embedding.pkl', 'rb'))
-	dimensions = 100
-	trainable = False
-	# create a weight matrix for words in training docs
-	weights = zeros((vocab_size, dimensions))
-	# walk words in order of tokenizer vocab to ensure vectors are in the right index
-	for word, i in tokenizer.word_index.items():
-		if word not in embedding:
-			continue
-		weights[i] = embedding[word]
-	layer = Embedding(vocab_size, dimensions, weights=[weights], input_length=max_length, trainable=trainable, mask_zero=True)
-	return layer
+    # load the tokenizer
+    embedding = load(open('word2vec_embedding.pkl', 'rb'))
+    dimensions = 100
+    trainable = False
+    # create a weight matrix for words in training docs
+    weights = zeros((vocab_size, dimensions))
+    # walk words in order of tokenizer vocab to ensure vectors are in the right index
+    for word, i in tokenizer.word_index.items():
+        if word not in embedding:
+            continue
+        weights[i] = embedding[word]
+    layer = Embedding(vocab_size, dimensions, weights=[weights], input_length=max_length, trainable=trainable, mask_zero=True)
+    return layer
 
 
 # define the captioning model - CALL LOAD_EMBEDDING FUNCTION IN EMB2
 def define_model(tokenizer, vocab_size, max_length):
-	# feature extractor (encoder)
-	inputs1 = Input(shape=(7, 7, 512))
-	fe1 = GlobalMaxPooling2D()(inputs1)
-	fe2 = Dense(128, activation='relu')(fe1)
-	fe3 = RepeatVector(max_length)(fe2)
-	# embedding
-	inputs2 = Input(shape=(max_length,))
-	emb2 = load_embedding(tokenizer, vocab_size, max_length)(inputs2)
-	emb3 = LSTM(256, return_sequences=True)(emb2)
-	emb4 = TimeDistributed(Dense(128, activation='relu'))(emb3)
-	# merge inputs
-	merged = concatenate([fe3, emb4])
-	# language model (decoder)
-	lm2 = LSTM(500)(merged)
-	lm3 = Dense(500, activation='relu')(lm2)
-	outputs = Dense(vocab_size, activation='softmax')(lm3)
-	# tie it together [image, seq] [word]
-	model = Model(inputs=[inputs1, inputs2], outputs=outputs)
-	model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-	return model
+    # feature extractor (encoder)
+    inputs1 = Input(shape=(7, 7, 512))
+    fe1 = GlobalMaxPooling2D()(inputs1)
+    fe2 = Dense(128, activation='relu')(fe1)
+    fe3 = RepeatVector(max_length)(fe2)
+    # embedding
+    inputs2 = Input(shape=(max_length,))
+    emb2 = load_embedding(tokenizer, vocab_size, max_length)(inputs2)
+    emb3 = LSTM(256, return_sequences=True)(emb2)
+    emb4 = TimeDistributed(Dense(128, activation='relu'))(emb3)
+    # merge inputs
+    merged = concatenate([fe3, emb4])
+    # language model (decoder)
+    lm2 = LSTM(500)(merged)
+    lm3 = Dense(500, activation='relu')(lm2)
+    outputs = Dense(vocab_size, activation='softmax')(lm3)
+    # tie it together [image, seq] [word]
+    model = Model(inputs=[inputs1, inputs2], outputs=outputs)
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    return model
 
 #model_name = 'seq_w2v_fixed'
 
@@ -197,6 +198,7 @@ for i in range(epochs):
           lowLoss = history.history["loss"]
           model.save('model_out.h5')
 '''
+
 
 # map an integer to a word
 def word_for_id(integer, tokenizer):
@@ -262,6 +264,8 @@ print('Descriptions: train=%d, test=%d' % (len(train_descriptions), len(test_des
 train_features = load_photo_features('features.pkl', train)
 test_features = load_photo_features('features.pkl', test)
 print('Photos: train=%d, test=%d' % (len(train_features), len(test_features)))
+
+# CALC VALUES OF TOKENIZER, VOCAB_SIZE & MAX_LENGTH TO USE AS INPUTS IN define_model()
 # prepare tokenizer
 tokenizer = create_tokenizer(train_descriptions)
 vocab_size = len(tokenizer.word_index) + 1
@@ -269,6 +273,7 @@ print('Vocabulary Size: %d' % vocab_size)
 # determine the maximum sequence length
 max_length = max(len(s.split()) for s in list(train_descriptions.values()))
 print('Description Length: %d' % max_length)
+
 
 # define experiment
 model_name = 'seq_w2v_fixed'
@@ -282,7 +287,7 @@ n_repeats = 3
 train_results, test_results = list(), list()
 for i in range(n_repeats):
     # define the model
-    model = define_model(vocab_size, max_length)
+    model = define_model(tokenizer, vocab_size, max_length)
     # fit model
     model.fit_generator(data_generator(train_descriptions, train_features, tokenizer, max_length, n_photos_per_update),
                         steps_per_epoch=n_batches_per_epoch, epochs=n_epochs, verbose=verbose)
